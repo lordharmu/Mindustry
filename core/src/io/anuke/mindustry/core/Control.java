@@ -54,7 +54,6 @@ public class Control extends Module{
     private Throwable error;
 
     public Control(){
-
         saves = new Saves();
         unlocks = new Unlocks();
 
@@ -90,7 +89,7 @@ public class Control extends Module{
             "color-1", Color.rgba8888(playerColors[11]),
             "color-2", Color.rgba8888(playerColors[13]),
             "color-3", Color.rgba8888(playerColors[9]),
-            "name", "player",
+            "name", "",
             "lastBuild", 0
         );
 
@@ -112,15 +111,6 @@ public class Control extends Module{
             }
 
             state.set(State.playing);
-
-            if(world.getSector() == null && !Settings.getBool("custom-warning-for-real-1", false)){
-                threads.runGraphics(() -> ui.showInfo("$mode.custom.warning", () ->
-                    ui.showInfo("$mode.custom.warning.read", () -> {
-                        Settings.putBool("custom-warning-for-real-1", true);
-                        Settings.save();
-                    })));
-
-            }
         });
 
         Events.on(WorldLoadGraphicsEvent.class, event -> {
@@ -179,12 +169,6 @@ public class Control extends Module{
         });
 
         Events.on(WorldLoadEvent.class, event -> threads.runGraphics(() -> Events.fire(new WorldLoadGraphicsEvent())));
-
-        Events.on(TileChangeEvent.class, event -> {
-            if(event.tile.getTeam() == players[0].getTeam() && Recipe.getByResult(event.tile.block()) != null){
-                unlocks.handleContentUsed(Recipe.getByResult(event.tile.block()));
-            }
-        });
     }
 
     public void addPlayer(int index){
@@ -278,7 +262,7 @@ public class Control extends Module{
         outer:
         for(int i = 0; i < content.recipes().size; i ++){
             Recipe recipe = content.recipes().get(i);
-            if(!recipe.hidden && recipe.requirements != null){
+            if(!recipe.isHidden() && recipe.requirements != null){
                 for(ItemStack stack : recipe.requirements){
                     if(!entity.items.has(stack.item, Math.min((int) (stack.amount * unlockResourceScaling), 2000))) continue outer;
                 }
@@ -322,7 +306,7 @@ public class Control extends Module{
         if(!Settings.getBool("4.0-warning-2", false)){
 
             Timers.run(5f, () -> {
-                FloatingDialog dialog = new FloatingDialog("[orange]WARNING![]");
+                FloatingDialog dialog = new FloatingDialog("[accent]WARNING![]");
                 dialog.buttons().addButton("$text.ok", () -> {
                     dialog.hide();
                     Settings.putBool("4.0-warning-2", true);
@@ -393,6 +377,10 @@ public class Control extends Module{
                     ui.paused.show();
                     state.set(State.paused);
                 }
+            }
+
+            if(Inputs.keyTap("screenshot")){
+                renderer.takeMapScreenshot();
             }
 
         }else{

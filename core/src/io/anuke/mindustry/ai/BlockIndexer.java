@@ -2,7 +2,6 @@ package io.anuke.mindustry.ai;
 
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.*;
-import com.badlogic.gdx.utils.Bits;
 import io.anuke.mindustry.content.blocks.Blocks;
 import io.anuke.mindustry.entities.TileEntity;
 import io.anuke.mindustry.game.EventType.TileChangeEvent;
@@ -14,12 +13,14 @@ import io.anuke.mindustry.world.Tile;
 import io.anuke.mindustry.world.meta.BlockFlag;
 import io.anuke.ucore.core.Events;
 import io.anuke.ucore.function.Predicate;
-import io.anuke.ucore.util.*;
+import io.anuke.ucore.util.EnumSet;
+import io.anuke.ucore.util.Geometry;
+import io.anuke.ucore.util.Mathf;
+import io.anuke.ucore.util.ThreadArray;
 
 import static io.anuke.mindustry.Vars.*;
 
 //TODO consider using quadtrees for finding specific types of blocks within an area
-//TODO maybe use Arrays instead of ObjectSets?
 
 /**Class used for indexing special target blocks for AI.*/
 @SuppressWarnings("unchecked")
@@ -69,6 +70,7 @@ public class BlockIndexer{
                     flagMap[i][j] = new ObjectSet<>();
                 }
             }
+
             typeMap.clear();
             ores = null;
 
@@ -80,7 +82,7 @@ public class BlockIndexer{
 
             for(int x = 0; x < world.width(); x++){
                 for(int y = 0; y < world.height(); y++){
-                    Tile tile = world.tileWorld(x, y);
+                    Tile tile = world.tile(x, y);
 
                     process(tile);
 
@@ -244,7 +246,7 @@ public class BlockIndexer{
         for(int x = quadrantX * structQuadrantSize; x < world.width() && x < (quadrantX + 1) * structQuadrantSize; x++){
             for(int y = quadrantY * structQuadrantSize; y < world.height() && y < (quadrantY + 1) * structQuadrantSize; y++){
                 Tile result = world.tile(x, y);
-                if(result.block().drops == null || !scanOres.contains(result.block().drops.item)) continue;
+                if( result == null || result.block().drops == null || !scanOres.contains(result.block().drops.item)) continue;
 
                 itemSet.add(result.block().drops.item);
             }

@@ -95,7 +95,7 @@ public class SettingsMenuDialog extends SettingsDialog{
         prefs.clearChildren();
         prefs.add(menu);
 
-        ScrollPane pane = new ScrollPane(prefs, "clear");
+        ScrollPane pane = new ScrollPane(prefs);
         pane.addCaptureListener(new InputListener(){
             @Override
             public boolean touchDown(InputEvent event, float x, float y, int pointer, int button){
@@ -130,13 +130,16 @@ public class SettingsMenuDialog extends SettingsDialog{
         sound.volumePrefs();
 
         game.screenshakePref();
-        //game.checkPref("smoothcam", true);
         game.checkPref("effects", true);
         if(mobile){
             game.checkPref("autotarget", true);
         }
-        //game.sliderPref("sensitivity", 100, 10, 300, i -> i + "%");
-        game.sliderPref("saveinterval", 60, 10, 5 * 120, i -> Bundles.format("setting.seconds", i));
+        game.sliderPref("saveinterval", 120, 10, 5 * 120, i -> Bundles.format("setting.seconds", i));
+
+        if(!mobile){
+            game.checkPref("crashreport", true);
+        }
+
         game.pref(new Setting(){
             @Override
             public void add(SettingsTable table){
@@ -145,21 +148,21 @@ public class SettingsMenuDialog extends SettingsDialog{
                     dialog.setFillParent(false);
                     dialog.content().defaults().size(230f, 60f).pad(3);
                     dialog.addCloseButton();
-                    dialog.content().addButton("$text.settings.clearsectors", "clear", () -> {
+                    dialog.content().addButton("$text.settings.clearsectors", () -> {
                         ui.showConfirm("$text.confirm", "$text.settings.clear.confirm", () -> {
                             world.sectors.clear();
                             dialog.hide();
                         });
                     });
                     dialog.content().row();
-                    dialog.content().addButton("$text.settings.clearunlocks", "clear", () -> {
+                    dialog.content().addButton("$text.settings.clearunlocks", () -> {
                         ui.showConfirm("$text.confirm", "$text.settings.clear.confirm", () -> {
                             control.unlocks.reset();
                             dialog.hide();
                         });
                     });
                     dialog.content().row();
-                    dialog.content().addButton("$text.settings.clearall", "clear", () -> {
+                    dialog.content().addButton("$text.settings.clearall", () -> {
                         ui.showConfirm("$text.confirm", "$text.settings.clearall.confirm", () -> {
                             Map<String, Object> map = new HashMap<>();
                             for(String value : Settings.prefs().get().keySet()){
@@ -187,12 +190,6 @@ public class SettingsMenuDialog extends SettingsDialog{
         });
 
         graphics.sliderPref("fpscap", 125, 5, 125, 5, s -> (s > 120 ? Bundles.get("setting.fpscap.none") : Bundles.format("setting.fpscap.text", s)));
-        graphics.checkPref("multithread", mobile, threads::setEnabled);
-
-        if(Settings.getBool("multithread")){
-            threads.setEnabled(true);
-        }
-
 
         if(!mobile){
             graphics.checkPref("vsync", true, b -> Gdx.graphics.setVSync(b));
@@ -211,6 +208,7 @@ public class SettingsMenuDialog extends SettingsDialog{
         }
 
         graphics.checkPref("fps", false);
+        graphics.checkPref("indicators", true);
         graphics.checkPref("lasers", true);
         graphics.checkPref("minimap", !mobile); //minimap is disabled by default on mobile devices
     }
